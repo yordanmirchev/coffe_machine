@@ -1,15 +1,14 @@
-from data import MENU
-from data import resources
+from data import *
 from art import logo
 
-# TODO : Add logo
-
+""" Avaiable options, repot/off and recharge are hidden"""
 OPTIONS = ["espresso", "latte", "cappuccino", "report", "off", "recharge"]
 
-proffit = 0
+profit = 0
 
 
 def prompt_for_action():
+    """ Ask the user for input"""
     choice = ""
     while choice not in OPTIONS:
         choice = input("What would you like? (espresso/latte/cappuccino):")
@@ -17,21 +16,21 @@ def prompt_for_action():
     return choice
 
 
-# TODO : fix recharge
 def recharge():
-    var = {}
+    """ Refill resources with 1000 each"""
+    global resources
+    resources = {"water": 1000,
+                 "milk": 1000,
+                 "coffee": 1000,
+                 }
+    print("Refilling")
+    print_report()
 
-    var = {"water": 1000,
-           "milk": 1000,
-           "coffee": 1000,
-           }
 
-    return var
-
-
-def print_report(resources, proffit):
+def print_report():
+    """ Print current status reoprt"""
     print(
-        f"Current status report:\n\tWater: {resources['water']} ml\n\tMilk: {resources['milk']} ml\n\tCoffee: {resources['coffee']}g\n\tProffit: ${proffit}")
+        f"Current status report:\n\tWater: {resources['water']} ml\n\tMilk: {resources['milk']} ml\n\tCoffee: {resources['coffee']}g\n\tProfit: ${profit}")
 
 
 def has_sufficient_resource(present, required):
@@ -45,51 +44,58 @@ def refund(sum):
 
 
 def process_payment(cost):
-    """ Provides money refund  if insufficient, provides change if more and returns 0 if sufficient"""
+    """ Asks user for coins, sum them and evaluate if enough for the drink"""
     money = process_coins();
     if money < cost:
         print(f"Sorry there is not enough money, required: ${cost}, provided: ${money}.")
         refund(money)
-        return -1;
+        return False
     else:
         print("Enough resources.")
         change = round(money - cost, 2);
         if change >= 0:
             if change > 0:
                 refund(round(change, 2))
-            return 0
+            return True
 
 
-def check_resources(item):
+def has_enough_resources(item):
+    """ Checks if enough resources available for item"""
     drink = MENU[item]
     ingredients = drink["ingredients"]
-    price = drink["cost"]
 
     print(f"Selected {item}, it requites: ")
     for ingredient in ingredients:
         print(f"{ingredient} : {ingredients[ingredient]}")
 
-
     for resource in ingredients:
+        global resources
         present = resources[resource]
         required = ingredients[resource]
         if not has_sufficient_resource(present, required):
             print(f"Not enough {resource}")
-            return -1
+            return False
 
-        return process_payment(price)
+        return True
 
 
-# TODO : fix check
 def get_coins(type):
-    coin = ""
-    while not isinstance(coin, int):
-        coin = int(input(f"{type} count: "))
-        print(f"Inserted {coin} {type}")
-        return coin
+    """Asks user to provide coins count and evaluates if positive integer provided"""
+    coin = -1
+    while True:
+        user_input = input(f"{type} count: ")
+        try:
+            coin = int(user_input)
+            if coin >= 0:
+                break
+        except ValueError:
+            pass
+
+    return coin
 
 
 def process_coins():
+    """ Calculates the coins total"""
     quarters = get_coins("quarters")
     dimes = get_coins("dimes")
     nickles = get_coins("nickles")
@@ -106,52 +112,38 @@ def process_coins():
     return total
 
 
-def add_profit(sum):
-    print(f"add_profit: {sum}")
-
-
 def make_coffee(selection):
-    used_resources = {}
+    """Prepare the drink deduct resources and add profit"""
 
     for resource in MENU[selection]["ingredients"]:
-        used_resources[resource] = MENU[selection]["ingredients"][resource]
-
-    current_status = {"proffit": MENU[selection]["cost"],
-                      "resources": used_resources}
+        global resources
+        resources[resource] -= MENU[selection]["ingredients"][resource]
+    global profit
+    profit += MENU[selection]["cost"]
 
     print(f"Here is your {selection}. Enjoy!")
-    return current_status
 
 
-
-
-def run():
+def run_machine():
+    """ main method to run the machine"""
     print(logo)
     stop = False
-    current_proffit = proffit;
-    current_resources = resources;
 
     while not stop:
         selection = prompt_for_action()
-
         if selection == 'report':
-            print_report(current_resources, current_proffit)
+            print_report()
         if selection == 'off':
             stop = True
             print("Turning off.")
         if selection == 'recharge':
             recharge()
         if selection in ["espresso", "latte", "cappuccino"]:
-            if check_resources(selection) == 0:
-                print_report(current_resources, current_proffit)
-                update = make_coffee(selection)
-                current_proffit += update["proffit"]
-                current_resources_diff = update["resources"]
-                for resource in current_resources_diff:
-                    current_resources[resource] -= current_resources_diff[resource]
-
-                print_report(current_resources, current_proffit)
+            if has_enough_resources(selection):
+                if process_payment(MENU[selection]["cost"]):
+                    print_report()
+                    make_coffee(selection)
+                    print_report()
 
 
-# test()
-run()
+run_machine()
