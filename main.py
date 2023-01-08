@@ -1,7 +1,7 @@
 from data import *
 from art import logo
 
-""" Avaiable options, repot/off and recharge are hidden"""
+""" Available options, report/off and recharge are hidden"""
 OPTIONS = ["espresso", "latte", "cappuccino", "report", "off", "recharge"]
 
 profit = 0
@@ -28,7 +28,7 @@ def recharge():
 
 
 def print_report():
-    """ Print current status reoprt"""
+    """ Print current status report"""
     print(
         f"Current status report:\n\tWater: {resources['water']} ml\n\tMilk: {resources['milk']} ml\n\tCoffee: {resources['coffee']}g\n\tProfit: ${profit}")
 
@@ -81,7 +81,6 @@ def has_enough_resources(item):
 
 def get_coins(type):
     """Asks user to provide coins count and evaluates if positive integer provided"""
-    coin = -1
     while True:
         user_input = input(f"{type} count: ")
         try:
